@@ -7,7 +7,13 @@ import React, { useState } from 'react';
 import { Todo } from '../../types/Todo';
 
 function getUserById(userId: number) {
-  return usersFromServer.find(user => user.id === userId) || null;
+  const foundUser = usersFromServer.find(user => user.id === userId);
+
+  if (!foundUser) {
+    throw new Error(`User with id ${userId} not found`);
+  }
+
+  return foundUser;
 }
 
 const initialTodos = todosFromServer.map(todo => ({
@@ -16,6 +22,10 @@ const initialTodos = todosFromServer.map(todo => ({
 }));
 
 const getNewTodoId = (todos: Todo[]) => {
+  if (todos.length === 0) {
+    return 1;
+  }
+
   const maxId = Math.max(...todos.map(todo => todo.id));
 
   return maxId + 1;
@@ -72,12 +82,20 @@ export const App = () => {
       return;
     }
 
+    const user = getUserById(userId);
+
+    if (!user) {
+      sethasUserIdError(true);
+
+      return;
+    }
+
     addTodo({
       id: 0,
       title: title,
       completed: false,
       userId: userId,
-      user: getUserById(userId),
+      user: user,
     });
 
     reset();
@@ -116,7 +134,7 @@ export const App = () => {
             onChange={handleUserIdChange}
             required
           >
-            <option value="0" disabled>
+            <option value={0} disabled>
               Choose a user
             </option>
 
